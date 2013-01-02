@@ -1,0 +1,43 @@
+name: AFormula
+main: AFormula
+version: 1.2.4
+commands:
+    back:
+        description: Teleport to death point
+        usage: /<command>
+    hat:
+        description: Puts item on head
+        usage: /<command>
+    help:
+        description: Shows the help menu
+        usage: /<command>
+    home:
+        description: Teleport to home
+        usage: /<command>
+    homeset:
+        description: Sets the home
+        usage: /<command>
+    money:
+        description: Check the amount of money
+        usage: /<command>
+    moneyset:
+        description: Sets players money
+        usage: /<command> <player> <amount>
+    ping:
+        description: Check delay
+        usage: /<command>
+    tip:
+        description: On or off tips
+        usage: /<command>
+    trade:
+        description: Reply trade request
+        usage: /<command> <yes or no>
+    sell:
+        description: Sell item
+        usage: /<command> <player> <price>
+    spawn:
+        description: Teleport to spawn point
+        usage: /<command>
+    spawnset:
+        description: Sets the spawn point
+        usage: /<command>
