@@ -85,6 +85,8 @@ public class AFormula extends JavaPlugin implements Listener
 	FileConfiguration Value;
 	
 	int TipNumber = 0;
+	
+	boolean Correct = false;
 
 	public void onEnable()
 	{	
@@ -138,7 +140,7 @@ public class AFormula extends JavaPlugin implements Listener
 			}
 		}
 		
-		if (Config.getBoolean("CommandManager.Enable") && Config.getBoolean("CommandManager.Setting.CommandCooldown.Enable") && PlayerDataArray.length > 1)
+		if (Config.getBoolean("CommandManager.Enable") && PlayerDataArray.length > 1)
 		{
 			String[] FinalList = PlayerList.split(",");
 			for (int NeedCheckNumber = FinalList.length; NeedCheckNumber != 0; NeedCheckNumber--)
@@ -157,22 +159,45 @@ public class AFormula extends JavaPlugin implements Listener
 			Player Player = (Player) CommandSender;
 			String PlayerName = Player.getName().toUpperCase();
 			
+			boolean CommandBack = false;
+			boolean CommandHat = false;
+			boolean CommandHelp = false;
+			boolean CommandHome = false;
+			boolean CommandHomeset = false;
+			boolean CommandMoney = false;
+			boolean CommandMoneyset = false;
+			boolean CommandPing = false;
+			boolean CommandTip = false;
+			boolean CommandTrade = false;
+			boolean CommandSell = false;
+			boolean CommandSpawn = false;
+			boolean CommandSpawnset = false;
+			
 			if (Config.getBoolean("CommandManager.Enable"))
 			{
-				if (Config.getBoolean("CommandManager.Setting.Back.Enable") && CommandString.equalsIgnoreCase("back"))
+				List<String> CommandList = new ArrayList<String>(Config.getStringList("CommandManager.Setting.CommandRestrict.List"));
+				for (int ListNumber = 0; ListNumber <= CommandList.size() - 1; ListNumber++)
+				{
+					String[] CheckCommand = CommandList.get(ListNumber).split(",");
+					if (CheckCommand[0].equalsIgnoreCase("back")) { CommandBack = true; }
+					if (CheckCommand[0].equalsIgnoreCase("hat")) { CommandHat = true; }
+					if (CheckCommand[0].equalsIgnoreCase("help")) { CommandHelp = true; }
+					if (CheckCommand[0].equalsIgnoreCase("home")) { CommandHome = true; }
+					if (CheckCommand[0].equalsIgnoreCase("homeset")) { CommandHomeset = true; }
+					if (CheckCommand[0].equalsIgnoreCase("money")) { CommandMoney = true; }
+					if (CheckCommand[0].equalsIgnoreCase("moneyset")) { CommandMoneyset = true; }
+					if (CheckCommand[0].equalsIgnoreCase("ping")) { CommandPing = true; }
+					if (CheckCommand[0].equalsIgnoreCase("tip")) { CommandTip = true; }
+					if (CheckCommand[0].equalsIgnoreCase("trade")) { CommandTrade = true; }
+					if (CheckCommand[0].equalsIgnoreCase("sell")) { CommandSell = true; }
+					if (CheckCommand[0].equalsIgnoreCase("spawn")) { CommandSpawn = true; }
+					if (CheckCommand[0].equalsIgnoreCase("spawnset")) { CommandSpawnset = true; }
+				}
+				
+				if (CommandString.equalsIgnoreCase("back") && CommandBack)
 				{
 					if (Data.getString("Player." + PlayerName + ".DeathPoint") != null)
 					{
-						byte SpendFood = (byte) Config.getInt("CommandManager.Setting.Back.SpendFood");
-						if (SpendFood > 0 && Player.isOp() == false)
-						{
-							if (SpendFood > Player.getFoodLevel())
-							{
-								if (Config.getString("CommandManager.Message.ErrorFoodNotEnough").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.ErrorFoodNotEnough")); }
-								return true;
-							}
-							else { Player.setFoodLevel(Player.getFoodLevel() - SpendFood); }
-						}
 						String[] DeathPointData = Data.getString("Player." + PlayerName + ".DeathPoint").split(",");
 						Location DeathPoint = new Location(getServer().getWorld(DeathPointData[0]), Float.valueOf(DeathPointData[1]), Float.valueOf(DeathPointData[2] + 1), Float.valueOf(DeathPointData[3]));
 						Player.teleport(DeathPoint);
@@ -180,63 +205,60 @@ public class AFormula extends JavaPlugin implements Listener
 						Data.set("Player." + PlayerName + ".DeathPoint", null);
 						DataSave();
 					}
-					else { if (Config.getString("CommandManager.Message.BackError").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.BackError")); } }
+					else { if (Config.getString("CommandManager.Message.BackError").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.BackError")); } Correct = true; }
 				}
 				
-				if (Config.getBoolean("CommandManager.Setting.Hat.Enable") && CommandString.equalsIgnoreCase("hat"))
+				if (CommandString.equalsIgnoreCase("hat") && CommandHat)
 				{
 					if (Player.getItemInHand().getType() == Material.AIR)
 					{
-						if (Config.getString("CommandManager.Message.HatErrorAir").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.HatErrorAir")); }
+						if (Config.getString("CommandManager.Message.HatSuccess").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.HatErrorAir")); }
+						Correct = true;
 						return true;
 					}
+					ItemStack Hand = Player.getItemInHand();
+					ItemStack Head = Player.getInventory().getHelmet();
 					if (Player.getItemInHand().getAmount() == 1)
 					{
-						ItemStack ItemInHand = Player.getItemInHand();
-						ItemStack Helmet = Player.getInventory().getHelmet();
-						Player.getInventory().setHelmet(ItemInHand);
-						Player.getInventory().setItemInHand(Helmet);
-						if (Config.getString("CommandManager.Message.HatSuccess").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.HatSuccess")); }
+						Player.getInventory().setHelmet(Hand);
+						Player.getInventory().setItemInHand(Head);
 					}
-					else if (Config.getString("CommandManager.Message.HatErrorPlural").equals("") == false)
+					else
 					{
-						Player.sendMessage(Config.getString("CommandManager.Message.HatErrorPlural"));
-					}
-				}
-				
-				if (Config.getBoolean("CommandManager.Setting.Home.Enable"))
-				{
-					if (CommandString.equalsIgnoreCase("home"))
-					{
-						if (Data.getString("Player." + PlayerName + ".Home") != null)
+						int Amount = Player.getItemInHand().getAmount();
+						Hand.setAmount(1);
+						Player.getInventory().setHelmet(Hand);
+						Hand.setAmount(Amount - 1);
+						Player.getInventory().setItemInHand(Hand);
+						if (Head != null)
 						{
-							byte SpendFood = (byte) Config.getInt("CommandManager.Setting.Home.Setting.SpendFood");
-							if (SpendFood > 0 && Player.isOp() == false)
-							{
-								if (SpendFood > Player.getFoodLevel())
-								{
-									if (Config.getString("CommandManager.Message.ErrorFoodNotEnough").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.ErrorFoodNotEnough")); }
-									return true;
-								}
-								else { Player.setFoodLevel(Player.getFoodLevel() - SpendFood); }
-							}
-							String[] HomeData = Data.getString("Player." + PlayerName + ".Home").split(",");
-							Location Home = new Location(getServer().getWorld(HomeData[0]), Float.valueOf(HomeData[1]), Float.valueOf(HomeData[2]), Float.valueOf(HomeData[3]));
-							Player.teleport(Home);
-							if (Config.getString("CommandManager.Message.HomeSucces").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.HomeSucces")); }
+							if (Player.getInventory().firstEmpty() < 0 || (Player.getInventory().firstEmpty() < 0 && Player.getGameMode().toString().equals("CREATIVE"))) { Player.getWorld().dropItemNaturally(Player.getLocation(), Head); }
+							else { Player.getInventory().addItem(Head); }
 						}
-						else if (Config.getString("CommandManager.Message.HomeError").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.HomeError")); }
 					}
-					
-					if (CommandString.equalsIgnoreCase("homeset"))
-					{
-						Data.set("Player." + PlayerName + ".Home", Player.getWorld().getName() + "," + ((float) Player.getLocation().getX()) + "," + ((float) Player.getLocation().getY()) + "," + ((float) Player.getLocation().getZ()));
-						DataSave();
-						if (Config.getString("CommandManager.Message.HomesetSucces").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.HomesetSucces")); }
-					}
+					if (Config.getString("CommandManager.Message.HatSuccess").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.HatSuccess")); }
 				}
 				
-				if (Config.getBoolean("CommandManager.Setting.Ping.Enable") && CommandString.equalsIgnoreCase("ping"))
+				if (CommandString.equalsIgnoreCase("home") && CommandHome)
+				{
+					if (Data.getString("Player." + PlayerName + ".Home") != null)
+					{
+						String[] HomeData = Data.getString("Player." + PlayerName + ".Home").split(",");
+						Location Home = new Location(getServer().getWorld(HomeData[0]), Float.valueOf(HomeData[1]), Float.valueOf(HomeData[2]), Float.valueOf(HomeData[3]));
+						Player.teleport(Home);
+						if (Config.getString("CommandManager.Message.HomeSucces").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.HomeSucces")); }
+					}
+					else { if (Config.getString("CommandManager.Message.HomeError").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.HomeError")); } Correct = true; }
+				}
+					
+				if (CommandString.equalsIgnoreCase("homeset") && CommandHomeset)
+				{
+					Data.set("Player." + PlayerName + ".Home", Player.getWorld().getName() + "," + ((float) Player.getLocation().getX()) + "," + ((float) Player.getLocation().getY()) + "," + ((float) Player.getLocation().getZ()));
+					DataSave();
+					if (Config.getString("CommandManager.Message.HomesetSucces").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.HomesetSucces")); }
+				}
+				
+				if (CommandString.equalsIgnoreCase("ping") && CommandPing)
 				{
 					EntityPlayer EntityPlayer = (EntityPlayer) ((CraftPlayer) CommandSender).getHandle();
 					int Ping = EntityPlayer.ping;
@@ -250,38 +272,25 @@ public class AFormula extends JavaPlugin implements Listener
 					if (Config.getString("CommandManager.Message.Ping").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.Ping").replaceAll("%Ping", FinalPing)); }
 				}
 				
-				if (Config.getBoolean("CommandManager.Setting.Spawn.Enable"))
+				if (CommandString.equalsIgnoreCase("spawn") && CommandSpawn)
 				{
-					if (CommandString.equalsIgnoreCase("spawn"))
-					{
-			    		byte SpendFood = (byte) Config.getInt("CommandManager.Setting.Spawn.SpendFood");
-						if (SpendFood > 0 && Player.isOp() == false)
-						{
-							if (SpendFood > Player.getFoodLevel())
-							{
-								if (Config.getString("CommandManager.Message.ErrorFoodNotEnough").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.ErrorFoodNotEnough")); }
-								return true;
-							}
-							else { Player.setFoodLevel(Player.getFoodLevel() - SpendFood); }
-						}
-						Location SpawnLocation = Player.getWorld().getSpawnLocation();
-						SpawnLocation.setX(SpawnLocation.getX() + 0.5);
-						SpawnLocation.setY(SpawnLocation.getY() + 1);
-						SpawnLocation.setZ(SpawnLocation.getZ() + 0.5); 
-						Player.teleport(SpawnLocation);
-						if (Config.getString("CommandManager.Message.SpawnSucces").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.SpawnSucces")); }
-					}
-					
-					if (CommandString.equalsIgnoreCase("spawnset") && Player.isOp())
-					{
-						Location PlayerLocation = Player.getLocation();
-						Player.getWorld().setSpawnLocation(PlayerLocation.getBlockX(), PlayerLocation.getBlockY(), PlayerLocation.getBlockZ());
-						if (Config.getString("CommandManager.Message.SpawnsetSucces").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.SpawnsetSucces")); }
-					}
+					Location SpawnLocation = Player.getWorld().getSpawnLocation();
+					SpawnLocation.setX(SpawnLocation.getX() + 0.5);
+					SpawnLocation.setY(SpawnLocation.getY() + 1);
+					SpawnLocation.setZ(SpawnLocation.getZ() + 0.5); 
+					Player.teleport(SpawnLocation);
+					if (Config.getString("CommandManager.Message.SpawnSucces").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.SpawnSucces")); }
+				}
+				
+				if (CommandString.equalsIgnoreCase("spawnset") && Player.isOp() && CommandSpawnset)
+				{
+					Location PlayerLocation = Player.getLocation();
+					Player.getWorld().setSpawnLocation(PlayerLocation.getBlockX(), PlayerLocation.getBlockY(), PlayerLocation.getBlockZ());
+					if (Config.getString("CommandManager.Message.SpawnsetSucces").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.SpawnsetSucces")); }
 				}
 			}
 			
-			if (Config.getBoolean("MessageManager.Enable") && Config.getBoolean("MessageManager.Setting.Help") && CommandString.equalsIgnoreCase("help"))
+			if (Config.getBoolean("MessageManager.Enable") && Config.getBoolean("MessageManager.Setting.Help") && CommandString.equalsIgnoreCase("help") && CommandHelp)
 			{
 				List<String> Help = new ArrayList<String>(Config.getStringList("MessageManager.Message.Help.Player"));
 				for (int HelpNumber = 0; HelpNumber <= Help.size() - 1; HelpNumber++)
@@ -306,12 +315,12 @@ public class AFormula extends JavaPlugin implements Listener
 			
 			if (Config.getBoolean("MoneySystem.Enable"))
 			{
-				if (CommandString.equalsIgnoreCase("money") && Config.getString("MoneySystem.Message.CheckMoney").equals("") == false)
+				if (CommandString.equalsIgnoreCase("money") && Config.getString("MoneySystem.Message.CheckMoney").equals("") == false && CommandMoney)
 				{
 					Player.sendMessage(Config.getString("MoneySystem.Message.CheckMoney").replaceAll("%Money", NumberFormat.getInstance().format(Data.getInt("Player." + PlayerName + ".Money"))));
 				}
 				
-				if ((CommandString.equalsIgnoreCase("moneyset")) && Player.isOp())
+				if ((CommandString.equalsIgnoreCase("moneyset")) && Player.isOp() && CommandMoneyset)
 				{
 					if (StringArray.length == 2)
 					{
@@ -341,29 +350,30 @@ public class AFormula extends JavaPlugin implements Listener
 								if (Config.getString("MoneySystem.Message.SuccessSetSubtract").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.SuccessSetSubtract").replaceAll("%Player", getServer().getPlayer(StringArray[0]).getName()).replaceAll("%Amount", NumberFormat.getInstance().format(NewAmount)).replaceAll("%Money", NumberFormat.getInstance().format(Data.getInt("Player." + StringArray[0].toUpperCase() + ".Money")))); }
 							}
 						}
-						else { if (Config.getString("MoneySystem.Message.ErrorData").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorData")); } }
+						else { if (Config.getString("MoneySystem.Message.ErrorData").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorData")); } Correct = true; }
 					}
-					else { if (Config.getString("MoneySystem.Message.ErrorFormat").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorFormat")); } }
+					else { if (Config.getString("MoneySystem.Message.ErrorFormat").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorFormat")); } Correct = true; }
 				}
 				
-				if (CommandString.equalsIgnoreCase("sell"))
+				if (CommandString.equalsIgnoreCase("sell") && CommandSell)
 				{
-					if (StringArray.length != 2) { if (Config.getString("MoneySystem.Message.ErrorFormatSell").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorFormatSell")); } return true; }
-					if (getServer().getPlayer(StringArray[0]) == null) { if (Config.getString("MoneySystem.Message.ErrorOfflineSell").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorOfflineSell")); } return true; }
+					if (StringArray.length != 2) { if (Config.getString("MoneySystem.Message.ErrorFormatSell").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorFormatSell")); } Correct = true; return true; }
+					if (getServer().getPlayer(StringArray[0]) == null) { if (Config.getString("MoneySystem.Message.ErrorOfflineSell").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorOfflineSell")); } Correct = true; return true; }
 					String Amount = 0 + StringArray[1].replaceAll("\\D+", "");
 					int Price = Integer.parseInt(Amount);
-					if (Price <= 0) { if (Config.getString("MoneySystem.Message.ErrorPriceSell").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorPriceSell")); } return true; }
+					if (Price <= 0) { if (Config.getString("MoneySystem.Message.ErrorPriceSell").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorPriceSell")); } Correct = true; return true; }
 					Player Buyer = (Player) getServer().getPlayer(StringArray[0]);
-					if (Player.getName().toUpperCase().equals(StringArray[0].toUpperCase())) { if (Config.getString("MoneySystem.Message.ErrorSelfSell").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorSelfSell")); } return true; }
-					if (Data.get("Player." + Player.getName().toUpperCase() + ".Trade") != null) { if (Config.getString("MoneySystem.Message.ErrorIngSell").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorIngSell")); } return true; }
+					if (Player.getName().toUpperCase().equals(StringArray[0].toUpperCase())) { if (Config.getString("MoneySystem.Message.ErrorSelfSell").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorSelfSell")); } Correct = true; return true; }
+					if (Data.get("Player." + Player.getName().toUpperCase() + ".Trade") != null) { if (Config.getString("MoneySystem.Message.ErrorIngSell").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorIngSell")); } Correct = true; return true; }
 					if (Data.get("Player." + StringArray[0].toUpperCase() + ".Trade") != null)
 					{
 						String[] TradeData = Data.getString("Player." + StringArray[0].toUpperCase() + ".Trade").split(",");
 						if (TradeData[0].equals(Player.getName().toUpperCase()) && Config.getString("MoneySystem.Message.SellRequesting").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.SellRequesting")); }
 						else if (Config.getString("MoneySystem.Message.SellRequestError").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.SellRequestError")); }
+						Correct = true;
 						return true;
 					}
-					if (Player.getItemInHand().getType().name().equals("AIR") || Player.getItemInHand().getAmount() == 0) { if (Config.getString("MoneySystem.Message.ErrorItemSell").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorItemSell")); } return true; }
+					if (Player.getItemInHand().getType().name().equals("AIR") || Player.getItemInHand().getAmount() == 0) { if (Config.getString("MoneySystem.Message.ErrorItemSell").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorItemSell")); } Correct = true; return true; }
 					Data.set("Player." + Player.getName().toUpperCase() + ".Trade", "Requesting");
 					Data.set("Player." + StringArray[0].toUpperCase() + ".Trade", Player.getName().toUpperCase() + "," + Price + "," + Player.getItemInHand().getData().toString() + "," + Player.getItemInHand().getTypeId() + "," + Player.getItemInHand().getAmount() + "," + Player.getItemInHand().getDurability() + "," + Player.getItemInHand().getEnchantments().size() + "," + System.currentTimeMillis());
 					Data.set("Player." + StringArray[0].toUpperCase() + ".TradeItem", Player.getItemInHand());
@@ -452,15 +462,14 @@ public class AFormula extends JavaPlugin implements Listener
 					Player.getInventory().remove(FinalItem);
 					Data.set("Player." + Player.getName().toUpperCase() + ".TradeTemp", FinalItem);
 					DataSave();
-					
 				}
 				
-				if (CommandString.equalsIgnoreCase("trade"))
+				if (CommandString.equalsIgnoreCase("trade") && CommandTrade)
 				{
-					if (StringArray.length != 1) { if (Config.getString("MoneySystem.Message.ErrorFormatTrade").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorFormatTrade")); } return true; }
-					if (StringArray[0] == null) { if (Config.getString("MoneySystem.Message.ErrorFormatTrade").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorFormatTrade")); } return true; }
-					if (Data.get("Player." + Player.getName().toUpperCase() + ".Trade") == null) { if (Config.getString("MoneySystem.Message.TradeErrorNoRequest").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.TradeErrorNoRequest")); } return true; }
-					if (Data.get("Player." + Player.getName().toUpperCase() + ".Trade").equals("Requesting")) { if (Config.getString("MoneySystem.Message.TradeErrorRequesting").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.TradeErrorRequesting")); } return true; }
+					if (StringArray.length != 1) { if (Config.getString("MoneySystem.Message.ErrorFormatTrade").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorFormatTrade")); } Correct = true; return true; }
+					if (StringArray[0] == null) { if (Config.getString("MoneySystem.Message.ErrorFormatTrade").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorFormatTrade")); } Correct = true; return true; }
+					if (Data.get("Player." + Player.getName().toUpperCase() + ".Trade") == null) { if (Config.getString("MoneySystem.Message.TradeErrorNoRequest").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.TradeErrorNoRequest")); } Correct = true; return true; }
+					if (Data.get("Player." + Player.getName().toUpperCase() + ".Trade").equals("Requesting")) { if (Config.getString("MoneySystem.Message.TradeErrorRequesting").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.TradeErrorRequesting")); } Correct = true; return true; }
 					
 					if (StringArray[0].equalsIgnoreCase("yes"))
 					{
@@ -477,6 +486,7 @@ public class AFormula extends JavaPlugin implements Listener
 							Data.set("Player." + Player.getName().toUpperCase() + ".TradeItem", null);
 							DataSave();
 							if (Config.getString("MoneySystem.Message.TradeFailOffline").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.TradeFailOffline")); }
+							Correct = true;
 							return true;
 						}
 						
@@ -498,6 +508,7 @@ public class AFormula extends JavaPlugin implements Listener
 							DataSave();
 							if (Config.getString("MoneySystem.Message.TradeFailNoMoneySeller").equals("") == false) { Seller.sendMessage(Config.getString("MoneySystem.Message.TradeFailNoMoneySeller")); }
 							if (Config.getString("MoneySystem.Message.TradeFailNoMoneyBuyer").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.TradeFailNoMoneyBuyer")); }
+							Correct = true;
 							return true;
 						}
 						
@@ -543,13 +554,12 @@ public class AFormula extends JavaPlugin implements Listener
 						DataSave();
 						if (Config.getString("MoneySystem.Message.TradeFailBuyer").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.TradeFailBuyer")); }
 					}
-					
-					else { if (Config.getString("MoneySystem.Message.ErrorFormatTrade").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorFormatTrade")); } return true; }
+					else { if (Config.getString("MoneySystem.Message.ErrorFormatTrade").equals("") == false) { Player.sendMessage(Config.getString("MoneySystem.Message.ErrorFormatTrade")); } Correct = true; return true; }
 				}
 				
 			}
 			
-			if (Config.getBoolean("MessageManager.Enable") && Config.getBoolean("MessageManager.Setting.Tip.Enable") && CommandString.equalsIgnoreCase("tip"))
+			if (Config.getBoolean("MessageManager.Enable") && Config.getBoolean("MessageManager.Setting.Tip.Enable") && CommandString.equalsIgnoreCase("tip") && CommandTip)
 			{
 				if ((Data.getBoolean("Player." + PlayerName + ".Tip")) || (Data.get("Player." + PlayerName + ".Tip")) == null)
 				{
@@ -914,7 +924,7 @@ public class AFormula extends JavaPlugin implements Listener
 					int EventBlockID = event.getClickedBlock().getTypeId();
 					List<String> ProtectionBlockIDListArray = new ArrayList<String>(Config.getStringList("ExpansionManager.Setting.Protection.PlayerInteractBreakBlockIDList"));
 					String[] ProtectionBlockIDList = ProtectionBlockIDListArray.get(Number).split(",");
-					if (ProtectionBlockIDListArray.get(Number).length() != 0)
+					if (ProtectionBlockIDListArray.get(Number) != null && ProtectionBlockIDListArray.get(Number).length() != 0)
 					{
 						for (String Each : ProtectionBlockIDList)
 						{
@@ -945,61 +955,228 @@ public class AFormula extends JavaPlugin implements Listener
 	@EventHandler
 	public void PlayerCommandPreprocess (PlayerCommandPreprocessEvent event)
 	{
-		if (event.getPlayer() != null && event.getPlayer().isOp() != true)
+		if (Config.getBoolean("CommandManager.Enable") && Config.getBoolean("CommandManager.Setting.CommandRestrict.DisableOtherCommand"))
 		{
-			if (Config.getBoolean("CommandManager.Enable") && Config.getBoolean("CommandManager.Setting.CommandRestrict.Enable"))
+			final Player Player = event.getPlayer();
+			
+			boolean Allow = false;
+			boolean CoolDown = false;
+			boolean SpendFood = false;
+			boolean SpendMoney = false;
+			boolean SpendYes = false;
+			
+			if (Data.get("Player." + Player.getName().toUpperCase() + ".Command") != null)
 			{
-				List<String> AllowList = new ArrayList<String>(Config.getStringList("CommandManager.Setting.CommandRestrict.Allow"));
-				String[] CommandString = event.getMessage().replaceFirst("/", "").split(" ");
-				boolean Port = false;
-				for (int AllowListNumber = 0; AllowListNumber <= AllowList.size() - 1; AllowListNumber++)
-				{
-					if (AllowList.get(AllowListNumber).equalsIgnoreCase(CommandString[0])) { Port = true; }
-				}
-				if (Port == false) { event.setCancelled(true); }
+				String[] CommandData = Data.getString("Player." + Player.getName().toUpperCase() + ".Command").split("[;]");
+				if (event.getMessage().equalsIgnoreCase("/spend yes")) { event.setMessage(CommandData[0]); SpendYes = true; }
+				else { Data.set("Player." + Player.getName().toUpperCase() + ".Command", null); DataSave(); }
 			}
-				
-			if (Config.getBoolean("CommandManager.Enable") && Config.getBoolean("CommandManager.Setting.CommandCooldown.Enable"))
+			
+			if (Data.get("Player." + Player.getName().toUpperCase() + ".Command") == null || SpendYes == true)
 			{
-				List<String> CDList = new ArrayList<String>(Config.getStringList("CommandManager.Setting.CommandCooldown.List"));
-				String[] CommandString = event.getMessage().replaceFirst("/", "").split(" ");
-				boolean Port = false;
+				List<String> CommandList = new ArrayList<String>(Config.getStringList("CommandManager.Setting.CommandRestrict.List"));
+				final String[] CommandString = event.getMessage().replaceFirst("/", "").split(" ");
 				int CommandNumber = 0;
-				for (int CDListNumber = 0; CDListNumber <= CDList.size() - 1; CDListNumber++)
+				for (int AllowListNumber = 0; AllowListNumber <= CommandList.size() - 1; AllowListNumber++)
 				{
-					String[] CheckCommand = CDList.get(CDListNumber).split(":");
-					if (CommandString[0].equals(CheckCommand[0])) { Port = true; CommandNumber = CDListNumber;}
-				}
-				if (Port == true)
-				{
-					if (Data.get("Player." + event.getPlayer().getName().toUpperCase() + ".CommandCooldown." + CommandString[0].toLowerCase()) == null)
+					String[] Command = CommandList.get(AllowListNumber).split(",");
+					if (CommandString[0].equalsIgnoreCase(Command[0]))
 					{
-						Data.set("Player." + event.getPlayer().getName().toUpperCase() + ".CommandCooldown." + CommandString[0].toLowerCase(), System.currentTimeMillis());
-						DataSave();
+						Allow = true;
+						CommandNumber = AllowListNumber;
+						if (Command.length > 1 && Command[1].equals("0") == false) { CoolDown = true; }
+						if (Command.length > 2 && Command[2].equals("0") == false) { SpendFood = true; }
+						if (Command.length > 3 && Command[3].equals("0") == false && Config.getBoolean("MoneySystem.Enable")) { SpendMoney = true; }
 					}
-					else
+				}
+				
+				final String[] Command = CommandList.get(CommandNumber).split(",");
+				
+				if (Allow == false && event.getPlayer().isOp() == false)
+				{
+					if (Config.getString("CommandManager.Message.ErrorCommand").equals("") == false) { event.getPlayer().sendMessage(Config.getString("CommandManager.Message.ErrorCommand")); }
+					event.setCancelled(true);
+				}
+				
+				if (SpendMoney == true)
+				{
+					if (Integer.valueOf(Command[3]) > Data.getInt("Player." + Player.getName().toUpperCase() + ".Money"))
 					{
-						String[] InputCommand = CDList.get(CommandNumber).split(":");
-						int CommandCooldown = Integer.valueOf(InputCommand[1]);
-						int IntervalTime = (int) ((System.currentTimeMillis() - (long) Data.get("Player." + event.getPlayer().getName().toUpperCase() + ".CommandCooldown." + CommandString[0].toLowerCase())) / 1000);
-						if (IntervalTime >= CommandCooldown)
+						if (Config.getString("CommandManager.Message.ErrorMoneyNotEnough").equals("") == false)
 						{
-							Data.set("Player." + event.getPlayer().getName().toUpperCase() + ".CommandCooldown." + CommandString[0].toLowerCase(), System.currentTimeMillis());
+							event.getPlayer().sendMessage(Config.getString("CommandManager.Message.ErrorMoneyNotEnough").replaceAll("%Money", NumberFormat.getInstance().format(Integer.valueOf(Command[3]))));
+						}
+						SpendMoney = false;
+						SpendFood = false;
+						CoolDown = false;
+						if (Data.get("Player." + Player.getName().toUpperCase() + ".Command") != null)
+						{
+							Data.set("Player." + Player.getName().toUpperCase() + ".Command", null);
 							DataSave();
 						}
-						else
+						event.setCancelled(true);
+					}
+					else if (SpendYes == false && Data.get("Player." + Player.getName().toUpperCase() + ".Command") == null)
+					{
+						if (Config.getString("CommandManager.Message.SpendTip").equals("") == false)
 						{
-							String[] TimeFormatList = Config.getString("CommandManager.Setting.CommandCooldown.Format").split(",");
+							String SpendTip = Config.getString("CommandManager.Message.SpendTip").replaceAll("%Command", Command[0]);
+							String SpendTipFood = "";
+							String SpendTipMoney = "";
+							if (SpendFood == true) { SpendTipFood = Config.getString("CommandManager.Message.SpendTipFood").replaceAll("%Food", Command[2]); }
+							if (SpendMoney == true) { SpendTipMoney = Config.getString("CommandManager.Message.SpendTipMoney").replaceAll("%Money", Command[3]); }
+							if (SpendFood == true && SpendMoney == true) { SpendTip = SpendTip.replaceAll("%Spend", SpendTipFood + SpendTipMoney); }
+							else if (SpendFood == true) { SpendTip = SpendTip.replaceAll("%Spend", SpendTipFood); }
+							else if (SpendMoney == true) { SpendTip = SpendTip.replaceAll("%Spend", SpendTipMoney); }
+							event.getPlayer().sendMessage(SpendTip);
+						}
+						Data.set("Player." + Player.getName().toUpperCase() + ".Command", event.getMessage() + ";" + Command[2] + ";" + Command[3]);
+						SpendMoney = false;
+						SpendFood = false;
+						CoolDown = false;
+						event.setCancelled(true);
+					}
+				}
+				
+				if (SpendFood == true)
+				{
+					if (Integer.valueOf(Command[2]) > event.getPlayer().getFoodLevel())
+					{
+						SpendMoney = false;
+						SpendFood = false;
+						CoolDown = false;
+						if (Data.get("Player." + Player.getName().toUpperCase() + ".Command") != null)
+						{
+							Data.set("Player." + Player.getName().toUpperCase() + ".Command", null);
+							DataSave();
+						}
+						if (Config.getString("CommandManager.Message.ErrorFoodNotEnough").equals("") == false)
+						{
+							event.getPlayer().sendMessage(Config.getString("CommandManager.Message.ErrorFoodNotEnough").replaceAll("%Food", Command[2]));
+						}
+						event.setCancelled(true);
+					}
+					else if (SpendYes == false && Data.get("Player." + Player.getName().toUpperCase() + ".Command") == null)
+					{
+						if (Config.getString("CommandManager.Message.SpendTip").equals("") == false)
+						{
+							String SpendTip = Config.getString("CommandManager.Message.SpendTip").replaceAll("%Command", Command[0]);
+							String SpendTipFood = "";
+							String SpendTipMoney = "";
+							if (SpendFood == true) { SpendTipFood = Config.getString("CommandManager.Message.SpendTipFood").replaceAll("%Food", Command[2]); }
+							if (SpendMoney == true) { SpendTipMoney = Config.getString("CommandManager.Message.SpendTipMoney").replaceAll("%Money", Command[3]); }
+							if (SpendFood == true && SpendMoney == true) { SpendTip = SpendTip.replaceAll("%Spend", SpendTipFood + SpendTipMoney); }
+							else if (SpendFood == true) { SpendTip = SpendTip.replaceAll("%Spend", SpendTipFood); }
+							else if (SpendMoney == true) { SpendTip = SpendTip.replaceAll("%Spend", SpendTipMoney); }
+							event.getPlayer().sendMessage(SpendTip);
+						}
+						Data.set("Player." + Player.getName().toUpperCase() + ".Command", event.getMessage() + ";" + Command[2] + ";" + Command[3]);
+						DataSave();
+						SpendMoney = false;
+						SpendFood = false;
+						CoolDown = false;
+						event.setCancelled(true);
+					}
+				}
+				
+				if (CoolDown == true)
+				{
+					if (Data.get("Player." + event.getPlayer().getName().toUpperCase() + ".CommandCooldown." + CommandString[0].toLowerCase()) != null)
+					{
+						int CommandCooldown = Integer.valueOf(Command[1]);
+						int IntervalTime = (int) ((System.currentTimeMillis() - (long) Data.get("Player." + event.getPlayer().getName().toUpperCase() + ".CommandCooldown." + CommandString[0].toLowerCase())) / 1000);
+						if (IntervalTime < CommandCooldown)
+						{
+							String[] TimeFormatList = Config.getString("CommandManager.Setting.CommandRestrict.TimeFormat").split(",");
 							String TimeFormat = null;
 							int WaitTime = (CommandCooldown - IntervalTime);
 							if (((CommandCooldown - IntervalTime) / 3600) >= 1) { TimeFormat = TimeFormatList[2]; WaitTime = WaitTime / 3600;}
 							else if (((CommandCooldown - IntervalTime) / 60) >= 1) { TimeFormat = TimeFormatList[1]; WaitTime = WaitTime/ 60;}
 							else { TimeFormat = TimeFormatList[0]; }
 							if (Config.getString("CommandManager.Message.ErrorCommandCooldown").equals("") == false) { event.getPlayer().sendMessage(Config.getString("CommandManager.Message.ErrorCommandCooldown").replaceAll("%Time", String.valueOf(WaitTime)).replaceAll("%Format", TimeFormat)); }
+							SpendMoney = false;
+							SpendFood = false;
+							CoolDown = false;
 							event.setCancelled(true);
 						}
 					}
 				}
+				
+				final boolean FinalCoolDown = CoolDown;
+				final boolean FinalSpendFood = SpendFood;
+				final boolean FinalSpendMoney = SpendMoney;
+				final boolean FinalSpendYes = SpendYes;
+				
+				if (SpendMoney == true && SpendYes == true && Data.get("Player." + Player.getName().toUpperCase() + ".Command") != null)
+				{
+					int SpendMoneyAmount = Integer.valueOf(Command[3]);
+					int PlayerMoneyAmount = Data.getInt("Player." + Player.getName().toUpperCase() + ".Money");
+					Data.set("Player." + Player.getName().toUpperCase() + ".Money", PlayerMoneyAmount - SpendMoneyAmount);
+					if (Config.getString("CommandManager.Message.SpendMoney").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.SpendMoney").replaceAll("%Money", NumberFormat.getInstance().format(SpendMoneyAmount))); }
+				}
+				
+				if (SpendFood == true && SpendYes == true && Data.get("Player." + Player.getName().toUpperCase() + ".Command") != null)
+				{
+					event.getPlayer().setFoodLevel(event.getPlayer().getFoodLevel() - Integer.valueOf(Command[2]));
+					if (Config.getString("CommandManager.Message.SpendFood").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.SpendFood").replaceAll("%Food", Command[2])); }
+				}
+				
+				if (CoolDown == true)
+				{
+					if (Data.get("Player." + event.getPlayer().getName().toUpperCase() + ".CommandCooldown." + CommandString[0].toLowerCase()) == null)
+					{
+						Data.set("Player." + event.getPlayer().getName().toUpperCase() + ".CommandCooldown." + CommandString[0].toLowerCase(), System.currentTimeMillis());
+						DataSave();
+						
+					}
+					else
+					{
+						int CommandCooldown = Integer.valueOf(Command[1]);
+						int IntervalTime = (int) ((System.currentTimeMillis() - (long) Data.get("Player." + event.getPlayer().getName().toUpperCase() + ".CommandCooldown." + CommandString[0].toLowerCase())) / 1000);
+						if (IntervalTime >= CommandCooldown)
+						{
+							Data.set("Player." + event.getPlayer().getName().toUpperCase() + ".CommandCooldown." + CommandString[0].toLowerCase(), System.currentTimeMillis());
+							DataSave();
+						}
+					}
+				}
+				
+				if (SpendFood == true && SpendMoney == true && SpendYes == true && Data.get("Player." + Player.getName().toUpperCase() + ".Command") != null)
+				{
+					Data.set("Player." + Player.getName().toUpperCase() + ".Command", null);
+					DataSave();
+				}
+				else if (SpendFood == true && SpendYes == true && Data.get("Player." + Player.getName().toUpperCase() + ".Command") != null)
+				{
+					Data.set("Player." + Player.getName().toUpperCase() + ".Command", null);
+					DataSave();
+				}
+				else if (SpendMoney == true && SpendYes == true && Data.get("Player." + Player.getName().toUpperCase() + ".Command") != null)
+				{
+					Data.set("Player." + Player.getName().toUpperCase() + ".Command", null);
+					DataSave();
+				}
+
+				getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() { public void run()
+				{
+					if (Correct == true && FinalCoolDown == true)
+					{
+						Data.set("Player." + Player.getName().toUpperCase() + ".CommandCooldown." + CommandString[0].toLowerCase(), null);
+						DataSave();
+					}
+					if (Correct == true && FinalSpendFood == true && FinalSpendYes == true)
+					{
+						Player.setFoodLevel(Player.getFoodLevel() + Integer.valueOf(Command[2]));
+						if (Config.getString("CommandManager.Message.SpendFoodCorrect").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.SpendFoodCorrect").replaceAll("%Food", Command[2])); }
+					}
+					if (Correct == true && FinalSpendMoney == true && FinalSpendYes == true)
+					{
+						Data.set("Player." + Player.getName().toUpperCase() + ".Money", Data.getInt("Player." + Player.getName().toUpperCase() + ".Money") + Integer.valueOf(Command[3]));
+						DataSave();
+						if (Config.getString("CommandManager.Message.SpendMoneyCorrect").equals("") == false) { Player.sendMessage(Config.getString("CommandManager.Message.SpendMoneyCorrect").replaceAll("%Money", NumberFormat.getInstance().format(Integer.valueOf(Command[3])))); }
+					}
+					Correct = false;
+				} } );
 			}
 		}
 	}
