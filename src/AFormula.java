@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import net.minecraft.server.v1_4_6.EntityPlayer;
+import net.minecraft.server.v1_5_R2.EntityPlayer;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,9 +18,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.v1_4_6.entity.CraftCreeper;
-import org.bukkit.craftbukkit.v1_4_6.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_4_6.entity.CraftSkeleton;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftCreeper;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftSkeleton;
 import org.bukkit.entity.AnimalTamer;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.Arrow;
@@ -57,6 +57,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.PigZapEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
@@ -87,6 +88,20 @@ public class AFormula extends JavaPlugin implements Listener
 	int TipNumber = 0;
 	
 	boolean Correct = false;
+	
+	boolean CommandBack = false;
+	boolean CommandHat = false;
+	boolean CommandHelp = false;
+	boolean CommandHome = false;
+	boolean CommandHomeset = false;
+	boolean CommandMoney = false;
+	boolean CommandMoneyset = false;
+	boolean CommandPing = false;
+	boolean CommandTip = false;
+	boolean CommandTrade = false;
+	boolean CommandSell = false;
+	boolean CommandSpawn = false;
+	boolean CommandSpawnset = false;
 
 	public void onEnable()
 	{	
@@ -149,6 +164,28 @@ public class AFormula extends JavaPlugin implements Listener
 			}
 		}
 		
+		if (Config.getBoolean("CommandManager.Enable"))
+		{
+			List<String> CommandList = new ArrayList<String>(Config.getStringList("CommandManager.Setting.CommandRestrict.List"));
+			for (int ListNumber = 0; ListNumber <= CommandList.size() - 1; ListNumber++)
+			{
+				String[] CheckCommand = CommandList.get(ListNumber).split(",");
+				if (CheckCommand[0].equalsIgnoreCase("back")) { CommandBack = true; }
+				if (CheckCommand[0].equalsIgnoreCase("hat")) { CommandHat = true; }
+				if (CheckCommand[0].equalsIgnoreCase("help")) { CommandHelp = true; }
+				if (CheckCommand[0].equalsIgnoreCase("home")) { CommandHome = true; }
+				if (CheckCommand[0].equalsIgnoreCase("homeset")) { CommandHomeset = true; }
+				if (CheckCommand[0].equalsIgnoreCase("money")) { CommandMoney = true; }
+				if (CheckCommand[0].equalsIgnoreCase("moneyset")) { CommandMoneyset = true; }
+				if (CheckCommand[0].equalsIgnoreCase("ping")) { CommandPing = true; }
+				if (CheckCommand[0].equalsIgnoreCase("tip")) { CommandTip = true; }
+				if (CheckCommand[0].equalsIgnoreCase("trade")) { CommandTrade = true; }
+				if (CheckCommand[0].equalsIgnoreCase("sell")) { CommandSell = true; }
+				if (CheckCommand[0].equalsIgnoreCase("spawn")) { CommandSpawn = true; }
+				if (CheckCommand[0].equalsIgnoreCase("spawnset")) { CommandSpawnset = true; }
+			}
+		}
+		
 		getServer().getPluginManager().registerEvents(this, this);
 	}
 	
@@ -159,41 +196,8 @@ public class AFormula extends JavaPlugin implements Listener
 			Player Player = (Player) CommandSender;
 			String PlayerName = Player.getName().toUpperCase();
 			
-			boolean CommandBack = false;
-			boolean CommandHat = false;
-			boolean CommandHelp = false;
-			boolean CommandHome = false;
-			boolean CommandHomeset = false;
-			boolean CommandMoney = false;
-			boolean CommandMoneyset = false;
-			boolean CommandPing = false;
-			boolean CommandTip = false;
-			boolean CommandTrade = false;
-			boolean CommandSell = false;
-			boolean CommandSpawn = false;
-			boolean CommandSpawnset = false;
-			
 			if (Config.getBoolean("CommandManager.Enable"))
-			{
-				List<String> CommandList = new ArrayList<String>(Config.getStringList("CommandManager.Setting.CommandRestrict.List"));
-				for (int ListNumber = 0; ListNumber <= CommandList.size() - 1; ListNumber++)
-				{
-					String[] CheckCommand = CommandList.get(ListNumber).split(",");
-					if (CheckCommand[0].equalsIgnoreCase("back")) { CommandBack = true; }
-					if (CheckCommand[0].equalsIgnoreCase("hat")) { CommandHat = true; }
-					if (CheckCommand[0].equalsIgnoreCase("help")) { CommandHelp = true; }
-					if (CheckCommand[0].equalsIgnoreCase("home")) { CommandHome = true; }
-					if (CheckCommand[0].equalsIgnoreCase("homeset")) { CommandHomeset = true; }
-					if (CheckCommand[0].equalsIgnoreCase("money")) { CommandMoney = true; }
-					if (CheckCommand[0].equalsIgnoreCase("moneyset")) { CommandMoneyset = true; }
-					if (CheckCommand[0].equalsIgnoreCase("ping")) { CommandPing = true; }
-					if (CheckCommand[0].equalsIgnoreCase("tip")) { CommandTip = true; }
-					if (CheckCommand[0].equalsIgnoreCase("trade")) { CommandTrade = true; }
-					if (CheckCommand[0].equalsIgnoreCase("sell")) { CommandSell = true; }
-					if (CheckCommand[0].equalsIgnoreCase("spawn")) { CommandSpawn = true; }
-					if (CheckCommand[0].equalsIgnoreCase("spawnset")) { CommandSpawnset = true; }
-				}
-				
+			{	
 				if (CommandString.equalsIgnoreCase("back") && CommandBack)
 				{
 					if (Data.getString("Player." + PlayerName + ".DeathPoint") != null)
@@ -290,24 +294,28 @@ public class AFormula extends JavaPlugin implements Listener
 				}
 			}
 			
-			if (Config.getBoolean("MessageManager.Enable") && Config.getBoolean("MessageManager.Setting.Help") && CommandString.equalsIgnoreCase("help") && CommandHelp)
-			{
-				List<String> Help = new ArrayList<String>(Config.getStringList("MessageManager.Message.Help.Player"));
-				for (int HelpNumber = 0; HelpNumber <= Help.size() - 1; HelpNumber++)
+			if (Config.getBoolean("MessageManager.Enable") && Config.getBoolean("MessageManager.Setting.Help.Enable") && CommandString.equalsIgnoreCase("help") && CommandHelp)
+			{	
+				ArrayList<String> HelpList = new ArrayList<String>();
+				if (Player.isOp()) { HelpList.addAll(Config.getStringList("MessageManager.Message.Help.Operator")); }
+				HelpList.addAll(Config.getStringList("MessageManager.Message.Help.Player"));
+				if (Config.getBoolean("MessageManager.Setting.Help.Page"))
 				{
-					if (Help.get(HelpNumber).equals("") == false)
+					int Page = (int) Math.ceil(Double.valueOf(HelpList.size()) / Config.getDouble("MessageManager.Setting.Help.Size"));
+					int InputPage = 1;
+					if (StringArray.length != 0)
 					{
-						Player.sendMessage(Help.get(HelpNumber).toString());
+						String Amount = 0 + StringArray[0].replaceAll("\\D+", "");
+						InputPage = Integer.parseInt(Amount);
+						if (InputPage < 1) { InputPage = 1; }
 					}
-				}
-				if (Player.isOp())
-				{
-					List<String> HelpToOP = new ArrayList<String>(Config.getStringList("MessageManager.Message.Help.Operator"));
-					for (int HelpNumber = 0; HelpNumber <= HelpToOP.size() - 1; HelpNumber++)
+					if (InputPage > Page) { InputPage = Page; }
+					Player.sendMessage(Config.getString("MessageManager.Message.Help.Title").replaceAll("%Now", String.valueOf(InputPage)).replaceAll("%Max", String.valueOf(Page)));
+					for (int Number = Config.getInt("MessageManager.Setting.Help.Size") * (InputPage - 1); Number < (Config.getInt("MessageManager.Setting.Help.Size") * InputPage); Number++)
 					{
-						if (HelpToOP.get(HelpNumber).equals("") == false)
+						if (Number < HelpList.size())
 						{
-							Player.sendMessage(HelpToOP.get(HelpNumber).toString());
+							Player.sendMessage(HelpList.get(Number).toString());
 						}
 					}
 				}
@@ -744,7 +752,7 @@ public class AFormula extends JavaPlugin implements Listener
 			}
 		}
 		
-		if (Config.getBoolean("CommandManager.Setting.Spawn.Enable") && event.getPlayer().getLastPlayed() == 0)
+		if (event.getPlayer().getLastPlayed() == 0)
 		{
 			if (Config.getBoolean("CommandManager.Setting.Spawn.FirstJoinInSpawn"))
 			{
@@ -801,7 +809,7 @@ public class AFormula extends JavaPlugin implements Listener
 			}
 			else
 			{
-				if (Config.getString("ExpansionManager.Setting.KeepInventory.DropBroadcast").equals("") == false && event.getDrops().size() > 0)
+				if (Config.getString("ExpansionManager.Message.DropBroadcast").equals("") == false && event.getDrops().size() > 0)
 				{
 					getServer().broadcastMessage(Config.getString("ExpansionManager.Message.DropBroadcast").replaceAll("%Player", event.getEntity().getName()));
 				}
@@ -812,6 +820,7 @@ public class AFormula extends JavaPlugin implements Listener
 		{
 			String Cause = event.getEntity().getLastDamageCause().getCause().toString();
 			String Attacker = null;
+			
 			if (Cause.equalsIgnoreCase("SUICIDE")) { Cause = "Suicide"; }
 			else if (Cause.equalsIgnoreCase("CONTACT")) { Cause = "Contact"; }
 			else if (Cause.equalsIgnoreCase("SUFFOCATION")) { Cause = "Suffocation"; }
@@ -862,7 +871,7 @@ public class AFormula extends JavaPlugin implements Listener
 			event.setDeathMessage(null);
 		}
 		
-		if (Config.getBoolean("CommandManager.Enable") && Config.getBoolean("CommandManager.Setting.Back.Enable"))
+		if (Config.getBoolean("CommandManager.Enable") && CommandBack)
 		{
 			Data.set("Player." + event.getEntity().getName().toUpperCase() + ".DeathPoint", event.getEntity().getLocation().getWorld().getName() + "," + (float) event.getEntity().getLocation().getX() + "," + (float) event.getEntity().getLocation().getY() + "," + (float) event.getEntity().getLocation().getZ());
 			DataSave();
@@ -878,16 +887,16 @@ public class AFormula extends JavaPlugin implements Listener
 			getServer().broadcastMessage(Config.getString("MessageManager.Message.Respawn").replaceAll("%Player", event.getPlayer().getName()));
 		}
 		
-		if (Config.getBoolean("CommandManager.Enable") && Config.getBoolean("CommandManager.Setting.Back.Enable") && Config.getString("CommandManager.Setting.Back.TipMessage").equals("") == false)
+		if (Config.getBoolean("CommandManager.Enable") && CommandBack && Config.getString("CommandManager.Setting.Back.TipMessage").equals("") == false)
 		{
 			final Player Player = event.getPlayer();
-			getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() { public void run() { if (Data.getBoolean("Player." + Player.getPlayer().getName().toUpperCase() + ".Tip") && Config.getString("CommandManager.Setting.Back.TipMessage").equals("") == false) { Player.getPlayer().sendMessage(Config.getString("CommandManager.Setting.Back.TipMessage")); } } } ,20);
+			getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() { public void run() { if (Data.getBoolean("Player." + Player.getPlayer().getName().toUpperCase() + ".Tip")) { Player.getPlayer().sendMessage(Config.getString("CommandManager.Setting.Back.TipMessage")); } } } ,20);
 		}
 	}
 	
 	@EventHandler
 	public void PlayerInteract (PlayerInteractEvent event)
-	{		
+	{
 		if (Config.getBoolean("ExpansionManager.Enable") && Config.getBoolean("ExpansionManager.Setting.Protection.Enable"))
 		{
 			List<String> ProtectionWorldList = new ArrayList<String>(Config.getStringList("ExpansionManager.Setting.Protection.WorldName"));
@@ -922,19 +931,23 @@ public class AFormula extends JavaPlugin implements Listener
 				else if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_BLOCK)
 				{
 					int EventBlockID = event.getClickedBlock().getTypeId();
-					List<String> ProtectionBlockIDListArray = new ArrayList<String>(Config.getStringList("ExpansionManager.Setting.Protection.PlayerInteractBreakBlockIDList"));
-					String[] ProtectionBlockIDList = ProtectionBlockIDListArray.get(Number).split(",");
-					if (ProtectionBlockIDListArray.get(Number) != null && ProtectionBlockIDListArray.get(Number).length() != 0)
+					List<String> ProtectionBlockIDListArray = new ArrayList<String>(Config.getStringList("ExpansionManager.Setting.Protection.PlayerInteractBreakBlockIDList"));					
+					if (ProtectionBlockIDListArray.size() - 1 >= Number)
 					{
-						for (String Each : ProtectionBlockIDList)
+						String[] ProtectionBlockIDList = ProtectionBlockIDListArray.get(Number).split(",");
+						if (ProtectionBlockIDListArray.get(Number) != null && ProtectionBlockIDListArray.get(Number).length() != 0)
 						{
-							int AnyOneID = Integer.valueOf(Each).intValue();
-							if (EventBlockID == AnyOneID)
+							for (String Each : ProtectionBlockIDList)
 							{
-								byte Type = (byte) Config.getInt("ExpansionManager.Setting.Protection.PlayerInteractBreakBlock");
-								if (event.getPlayer().isOp() == true) { event.setCancelled(false); }
-								else if (Type == 1) { event.setCancelled(true); }
-								else if ((Type == 2) && ProtectionSpawnLocation) { event.setCancelled(true); }
+								int AnyOneID = Integer.valueOf(Each).intValue();
+								if (EventBlockID == AnyOneID)
+								{
+									String[] ProtectionType = Config.getString("ExpansionManager.Setting.Protection.PlayerInteractBreakBlock").split(",");
+									byte Type = Byte.valueOf(ProtectionType[Number]);
+									if (event.getPlayer().isOp() == true) { event.setCancelled(false); }
+									else if (Type == 1) { event.setCancelled(true); }
+									else if ((Type == 2) && ProtectionSpawnLocation) { event.setCancelled(true); }
+								}
 							}
 						}
 					}
@@ -1177,6 +1190,44 @@ public class AFormula extends JavaPlugin implements Listener
 					}
 					Correct = false;
 				} } );
+			}
+		}
+	}
+	
+	@EventHandler
+	public void EntityInteractEvent (EntityInteractEvent event)
+	{
+		if (Config.getBoolean("ExpansionManager.Enable") && Config.getBoolean("ExpansionManager.Setting.Protection.Enable"))
+		{
+			List<String> ProtectionWorldList = new ArrayList<String>(Config.getStringList("ExpansionManager.Setting.Protection.WorldName"));
+			boolean ProtectionEnable = false;
+			String ProtectionWorldName = null;
+			int Number = 0;
+			for (Number = 0; Number != ProtectionWorldList.size(); Number++)
+			{
+				ProtectionWorldName = ProtectionWorldList.get(Number);
+				if (event.getEntity().getLocation().getWorld().getName().equalsIgnoreCase(ProtectionWorldName))
+				{
+					ProtectionEnable = true;
+					break;
+				}
+			}
+			if (ProtectionEnable != false)
+			{
+				int ProtectionSpawnX = getServer().getWorld(ProtectionWorldName).getSpawnLocation().getBlockX();
+				int ProtectionSpawnZ = getServer().getWorld(ProtectionWorldName).getSpawnLocation().getBlockZ();
+				int ProtectionSpawnR = getServer().getSpawnRadius();
+				int ProtectionEventX = event.getEntity().getLocation().getBlockX();
+				int ProtectionEventZ = event.getEntity().getLocation().getBlockZ();
+				boolean ProtectionSpawnLocation = ((ProtectionEventX >= (ProtectionSpawnX-ProtectionSpawnR) && ProtectionEventX <= (ProtectionSpawnX+ProtectionSpawnR)) && (ProtectionEventZ >= (ProtectionSpawnZ-ProtectionSpawnR) && ProtectionEventZ <= (ProtectionSpawnZ+ProtectionSpawnR)));
+				
+				if (event.getBlock().getType() == Material.SOIL)
+				{
+					String[] ProtectionType = Config.getString("ExpansionManager.Setting.Protection.EntityInteractTrampleSoil").split(",");
+					byte Type = Byte.valueOf(ProtectionType[Number]);
+					if (Type == 1) { event.setCancelled(true); }
+					else if (Type == 2 && ProtectionSpawnLocation) { event.setCancelled(true); }
+				}
 			}
 		}
 	}
@@ -1591,6 +1642,7 @@ public class AFormula extends JavaPlugin implements Listener
 					break;
 				}
 			}
+			
 			if (ProtectionEnable != false)
 			{
 				int ProtectionSpawnX = getServer().getWorld(ProtectionWorldName).getSpawnLocation().getBlockX();
@@ -1599,10 +1651,17 @@ public class AFormula extends JavaPlugin implements Listener
 				int ProtectionEventX = event.getBlock().getLocation().getBlockX();
 				int ProtectionEventZ = event.getBlock().getLocation().getBlockZ();
 				boolean ProtectionSpawnLocation = ((ProtectionEventX >= (ProtectionSpawnX-ProtectionSpawnR) && ProtectionEventX <= (ProtectionSpawnX+ProtectionSpawnR)) && (ProtectionEventZ >= (ProtectionSpawnZ-ProtectionSpawnR) && ProtectionEventZ <= (ProtectionSpawnZ+ProtectionSpawnR)));
-            	String[] ProtectionType = Config.getString("ExpansionManager.Setting.Protection.BlockIgniteByLightning").split(",");
-				byte Type = Byte.valueOf(ProtectionType[Number]);
 				if (event.getCause() == IgniteCause.LIGHTNING)
 				{
+					String[] ProtectionType = Config.getString("ExpansionManager.Setting.Protection.BlockIgniteByLightning").split(",");
+					byte Type = Byte.valueOf(ProtectionType[Number]);
+					if (Type == 1) { event.setCancelled(true); }
+					else if (Type == 2 && ProtectionSpawnLocation) { event.setCancelled(true); }
+				}
+				else
+				{
+					String[] ProtectionType = Config.getString("ExpansionManager.Setting.Protection.BlockIgnite").split(",");
+					byte Type = Byte.valueOf(ProtectionType[Number]);
 					if (Type == 1) { event.setCancelled(true); }
 					else if (Type == 2 && ProtectionSpawnLocation) { event.setCancelled(true); }
 				}
